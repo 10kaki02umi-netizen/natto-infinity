@@ -35,7 +35,12 @@ function revealColor(){
  document.documentElement.style.setProperty("--tint",c.tint);
  document.documentElement.style.setProperty("--tint-strength",String(.05+.34*t));
 }
-function sound(){if(!soundOn)return;try{let C=window.AudioContext||window.webkitAudioContext;if(!C)return;if(!audio)audio=new C();if(audio.state==="suspended")audio.resume();let t=audio.currentTime,o=audio.createOscillator(),g=audio.createGain(),f=audio.createBiquadFilter();o.type="sine";o.frequency.setValueAtTime(240,t);o.frequency.exponentialRampToValueAtTime(90,t+.13);f.type="lowpass";f.frequency.value=700;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.08,t+.015);g.gain.exponentialRampToValueAtTime(.0001,t+.18);o.connect(f);f.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+.19)}catch(e){}}
+const stickyAudio = new Audio("natto_nebaneba_sound.mp3");
+stickyAudio.preload = "auto";
+function sound(){
+ if(!soundOn)return;
+ try{stickyAudio.currentTime=0;const playPromise=stickyAudio.play();if(playPromise&&playPromise.catch)playPromise.catch(()=>{ });}catch(e){}
+}
 function update(){
  $("#count").textContent=count;$("#sidecount").textContent=count;
  const m=$("#mosaic"),pm=$("#photoMosaic");
