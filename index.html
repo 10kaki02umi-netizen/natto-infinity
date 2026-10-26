@@ -35,34 +35,41 @@ function revealColor(){
  document.documentElement.style.setProperty("--tint",c.tint);
  document.documentElement.style.setProperty("--tint-strength",String(.05+.34*t));
 }
+
 const stickyAudio = new Audio("./natto_sound.mp3");
 stickyAudio.preload = "auto";
+
 let audioReady = false;
 
-// Audio is unlocked from the user's tap on the sound button.
-async function enableAudio(){
- try {
-   stickyAudio.muted = true;
-   await stickyAudio.play();
-   stickyAudio.pause();
-   stickyAudio.currentTime = 0;
-   stickyAudio.muted = false;
-   audioReady = true;
-   $("#status").textContent = "ねばねば音 ON ♡ まぜまぜしてね！";
- } catch(e) {
-   audioReady = false;
-   $("#status").textContent = "音が再生できないみたい。もう一度音ONを押してね";
- }
+function enableAudio() {
+  stickyAudio.pause();
+  stickyAudio.currentTime = 0;
+  stickyAudio.muted = false;
+  stickyAudio.volume = 1;
+
+  stickyAudio.play()
+    .then(() => {
+      audioReady = true;
+      $("#status").textContent = "音が鳴ったよ♡ まぜまぜしてね！";
+      stickyAudio.pause();
+      stickyAudio.currentTime = 0;
+    })
+    .catch((error) => {
+      audioReady = false;
+      $("#status").textContent =
+        "音声エラー：" + error.name + " / " + error.message;
+    });
 }
-function sound(){
- if(!soundOn || !audioReady)return;
- try{
-   stickyAudio.pause();
-   stickyAudio.currentTime=0;
-   const playPromise=stickyAudio.play();
-   if(playPromise&&playPromise.catch)playPromise.catch(()=>{});
- }catch(e){}
+
+function sound() {
+  if (!soundOn || !audioReady) return;
+
+  stickyAudio.currentTime = 0;
+  stickyAudio.play().catch((error) => {
+    $("#status").textContent = "再生エラー：" + error.name;
+  });
 }
+
 function update(){
  $("#count").textContent=count;$("#sidecount").textContent=count;
  const m=$("#mosaic"),pm=$("#photoMosaic");
@@ -85,16 +92,21 @@ function end(){wrap.classList.remove("mixing");last=null;distance=0}
 wrap.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;wrap.setPointerCapture(e.pointerId);let r=wrap.getBoundingClientRect();last={x:e.clientX-r.left,y:e.clientY-r.top};wrap.classList.add("mixing")});
 wrap.addEventListener("pointermove",e=>{if(!last)return;let r=wrap.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;distance+=Math.hypot(x-last.x,y-last.y);if(distance>28){let n=Math.floor(distance/28);distance-=n*28;mix(n)}last={x,y}});
 wrap.addEventListener("pointerup",end);wrap.addEventListener("pointercancel",end);$("#mix").onclick=()=>mix(1);
-$("#reset").onclick=()=>{count=0;celebrated=false;beans();threads();apply();revealColor();$("#photoMosaic").style.display="none";update();$("#status").textContent="リセットしたよ♡ もう一度まぜまぜ！"};
-document.querySelectorAll(".condiment").forEach(b=>b.onclick=()=>{kind=b.dataset.kind;apply();$("#status").textContent="調味料を選んだよ…混ぜ終わるまで色はヒミツ♡"});
-$("#file").onchange=e=>{let f=e.target.files&&e.target.files[0];if(!f)return;if(photoURL)URL.revokeObjectURL(photoURL);photoURL=URL.createObjectURL(f);$("#inside").src=photoURL;$("#preview").src=photoURL;$("#preview").style.display="block";$("#photo").style.display="block";$("#photoMosaic").style.display="none";$("#remove").hidden=false;$("#status").textContent="画像が納豆にまざったよ♡"};
-$("#remove").onclick=()=>{if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;$("#inside").removeAttribute("src");$("#preview").removeAttribute("src");$("#preview").style.display="none";$("#photo").style.display="none";$("#photoMosaic").style.display="none";$("#remove").hidden=true;$("#file").value=""};
-$("#sound").onclick=async()=>{
- soundOn=!soundOn;
- $("#sound").textContent=soundOn?"🔊 ねばねば音 ON":"🔇 ねばねば音 OFF";
- $("#sound").setAttribute("aria-pressed",String(soundOn));
- if(soundOn) await enableAudio();
- else stickyAudio.pause();
+$("#sound").onclick = () => {
+  soundOn = !soundOn;
+
+  $("#sound").textContent = soundOn
+    ? "🔊 ねばねば音 ON"
+    : "🔇 ねばねば音 OFF";
+
+  $("#sound").setAttribute("aria-pressed", String(soundOn));
+
+  if (soundOn) {
+    enableAudio();
+  } else {
+    stickyAudio.pause();
+    audioReady = false;
+  }
 };
 beans();threads();apply();revealColor();update();
 </script></body></html>
