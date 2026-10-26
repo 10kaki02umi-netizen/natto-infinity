@@ -35,11 +35,33 @@ function revealColor(){
  document.documentElement.style.setProperty("--tint",c.tint);
  document.documentElement.style.setProperty("--tint-strength",String(.05+.34*t));
 }
-const stickyAudio = new Audio("natto_sound.mp3");
+const stickyAudio = new Audio("./natto_sound.mp3");
 stickyAudio.preload = "auto";
+let audioReady = false;
+
+// Audio is unlocked from the user's tap on the sound button.
+async function enableAudio(){
+ try {
+   stickyAudio.muted = true;
+   await stickyAudio.play();
+   stickyAudio.pause();
+   stickyAudio.currentTime = 0;
+   stickyAudio.muted = false;
+   audioReady = true;
+   $("#status").textContent = "ねばねば音 ON ♡ まぜまぜしてね！";
+ } catch(e) {
+   audioReady = false;
+   $("#status").textContent = "音が再生できないみたい。もう一度音ONを押してね";
+ }
+}
 function sound(){
- if(!soundOn)return;
- try{stickyAudio.currentTime=0;const playPromise=stickyAudio.play();if(playPromise&&playPromise.catch)playPromise.catch(()=>{ });}catch(e){}
+ if(!soundOn || !audioReady)return;
+ try{
+   stickyAudio.pause();
+   stickyAudio.currentTime=0;
+   const playPromise=stickyAudio.play();
+   if(playPromise&&playPromise.catch)playPromise.catch(()=>{});
+ }catch(e){}
 }
 function update(){
  $("#count").textContent=count;$("#sidecount").textContent=count;
@@ -67,6 +89,12 @@ $("#reset").onclick=()=>{count=0;celebrated=false;beans();threads();apply();reve
 document.querySelectorAll(".condiment").forEach(b=>b.onclick=()=>{kind=b.dataset.kind;apply();$("#status").textContent="調味料を選んだよ…混ぜ終わるまで色はヒミツ♡"});
 $("#file").onchange=e=>{let f=e.target.files&&e.target.files[0];if(!f)return;if(photoURL)URL.revokeObjectURL(photoURL);photoURL=URL.createObjectURL(f);$("#inside").src=photoURL;$("#preview").src=photoURL;$("#preview").style.display="block";$("#photo").style.display="block";$("#photoMosaic").style.display="none";$("#remove").hidden=false;$("#status").textContent="画像が納豆にまざったよ♡"};
 $("#remove").onclick=()=>{if(photoURL)URL.revokeObjectURL(photoURL);photoURL=null;$("#inside").removeAttribute("src");$("#preview").removeAttribute("src");$("#preview").style.display="none";$("#photo").style.display="none";$("#photoMosaic").style.display="none";$("#remove").hidden=true;$("#file").value=""};
-$("#sound").onclick=()=>{soundOn=!soundOn;$("#sound").textContent=soundOn?"🔊 ねばねば音 ON":"🔇 ねばねば音 OFF";$("#sound").setAttribute("aria-pressed",String(soundOn))};
+$("#sound").onclick=async()=>{
+ soundOn=!soundOn;
+ $("#sound").textContent=soundOn?"🔊 ねばねば音 ON":"🔇 ねばねば音 OFF";
+ $("#sound").setAttribute("aria-pressed",String(soundOn));
+ if(soundOn) await enableAudio();
+ else stickyAudio.pause();
+};
 beans();threads();apply();revealColor();update();
 </script></body></html>
