@@ -50,14 +50,12 @@ function enableAudio() {
   stickyAudio.play()
     .then(() => {
       audioReady = true;
-      $("#status").textContent = "音が鳴ったよ♡ まぜまぜしてね！";
-      stickyAudio.pause();
-      stickyAudio.currentTime = 0;
+      $("#status").textContent = "音 ON ♡ まぜまぜしてね！";
     })
     .catch((error) => {
       audioReady = false;
       $("#status").textContent =
-        "音声エラー：" + error.name + " / " + error.message;
+        "音声エラー：" + error.name;
     });
 }
 
